@@ -88,9 +88,9 @@ How we measure our impact:
 ---
 
 ## 🔮 Future Roadmap
-*   **Q3 2024**: AI-powered task prioritization.
-*   **Q4 2024**: Team collaboration and shared workspaces.
-*   **Q1 2025**: Native mobile apps for iOS and Android.
+*   **Q3 2026**: AI-powered task prioritization.
+*   **Q4 2026**: Team collaboration and shared workspaces.
+*   **Q1 2027**: Native mobile apps for iOS and Android.
 
 ---
 *Built with ❤️ by the TodoMaster Team.*
