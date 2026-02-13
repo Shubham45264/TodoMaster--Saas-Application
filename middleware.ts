@@ -3,45 +3,57 @@ import { NextResponse } from "next/server";
 
 const isPublicRoute = createRouteMatcher([
   "/",
+  "/sign-in(.*)",
+  "/sign-up(.*)",
   "/api/webhook/register",
-  "/sign-in",
-  "/sign-up",
+  "/error",
+]);
+
+const isAdminRoute = createRouteMatcher([
+  "/admin(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  if (!auth().userId && !isPublicRoute(req)) {
+  const { userId } = auth();
+
+  // Allow public routes
+  if (isPublicRoute(req)) {
+    return;
+  }
+
+  // Redirect unauthenticated users to sign-in
+  if (!userId) {
     return NextResponse.redirect(new URL("/sign-in", req.url));
   }
 
-  if (auth().userId) {
-    const { userId } = auth();
-
+  // Handle admin route protection
+  if (isAdminRoute(req)) {
     try {
       const user = await fetch(
-        `${process.env.NEXT_PUBLIC_CLERK_FRONTEND_API}/v1/users/${userId}`,
+        `https://api.clerk.com/v1/users/${userId}`,
         {
           headers: {
             Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
           },
         }
-      ).then((res) => res.json());
+      ).then(res => res.json());
 
       const role = user?.public_metadata?.role;
 
-      if (role === "admin" && req.nextUrl.pathname === "/dashboard") {
-        return NextResponse.redirect(new URL("/admin/dashboard", req.url));
-      }
-
-      if (role !== "admin" && req.nextUrl.pathname.startsWith("/admin")) {
+      if (role !== "admin") {
         return NextResponse.redirect(new URL("/dashboard", req.url));
       }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      return NextResponse.redirect(new URL("/error", req.url));
+
+    } catch {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
     }
   }
+
 });
 
 export const config = {
-  matcher: ["/((?!.+\\.[\\w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
+  matcher: [
+    "/((?!_next|.*\\..*).*)",
+    "/(api|trpc)(.*)",
+  ],
 };
